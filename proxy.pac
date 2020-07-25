@@ -4,31 +4,24 @@ var blackhole_ip_port = "116.202.148.28:8080";    // on iOS a working blackhole 
 
 var blackhole = "PROXY " + blackhole_ip_port;
 
-// 0 rules:
 var good_da_host_JSON = {  };
-var good_da_host_exact_flag = 0 > 0 ? true : false;  // test for non-zero number of rules
-    
-// 0 rules as an efficient NFA RegExp:
+var good_da_host_exact_flag = 0 > 0 ? true : false; 
+
 var good_da_host_RegExp = /^$/;
-var good_da_host_regex_flag = 0 > 0 ? true : false;  // test for non-zero number of rules
+var good_da_host_regex_flag = 0 > 0 ? true : false;
 
-// 0 rules:
 var good_da_hostpath_JSON = {  };
-var good_da_hostpath_exact_flag = 0 > 0 ? true : false;  // test for non-zero number of rules
+var good_da_hostpath_exact_flag = 0 > 0 ? true : false;  
     
-// 0 rules as an efficient NFA RegExp:
 var good_da_hostpath_RegExp = /^$/;
-var good_da_hostpath_regex_flag = 0 > 0 ? true : false;  // test for non-zero number of rules
-    
-// 0 rules as an efficient NFA RegExp:
+var good_da_hostpath_regex_flag = 0 > 0 ? true : false;  
+
 var good_da_RegExp = /^$/;
-var good_da_regex_flag = 0 > 0 ? true : false;  // test for non-zero number of rules
+var good_da_regex_flag = 0 > 0 ? true : false;  
 
-// 0 rules:
 var good_da_host_exceptions_JSON = {  };
-var good_da_host_exceptions_exact_flag = 0 > 0 ? true : false;  // test for non-zero number of rules
+var good_da_host_exceptions_exact_flag = 0 > 0 ? true : false;  
 
-// 7 rules:
 var bad_da_host_JSON = { 
     "ocsp.int-x3.letsencrypt.org": null,
     "ocsp.apple.com": null,
@@ -38,48 +31,27 @@ var bad_da_host_JSON = {
     "appldnld.apple.com": null,
     "world-gen.g.aaplimg.com": null
 };
-var bad_da_host_exact_flag = 7 > 0 ? true : false;  // test for non-zero number of rules
+var bad_da_host_exact_flag = 7 > 0 ? true : false;  
     
-// 0 rules as an efficient NFA RegExp:
 var good_url_parts_RegExp = /^$/;
-var good_url_parts_flag = 0 > 0 ? true : false;  // test for non-zero number of rules
-    
-// 0 rules as an efficient NFA RegExp:
-var good_url_RegExp = /^$/;
-var good_url_regex_flag = 0 > 0 ? true : false;  // test for non-zero number of rules
-    
-// 0 rules as an efficient NFA RegExp:
-var bad_url_RegExp = /^$/;
-var bad_url_regex_flag = 0 > 0 ? true : false;  // test for non-zero number of rules
+var good_url_parts_flag = 0 > 0 ? true : false;  
 
-// Add any good networks here. Format is network folowed by a comma and
-// optional white space, and then the netmask.
-// LAN, loopback, Apple (direct and Akamai e.g. e4805.a.akamaiedge.net), Microsoft (updates and services)
+var good_url_RegExp = /^$/;
+var good_url_regex_flag = 0 > 0 ? true : false;  
+    
+var bad_url_RegExp = /^$/;
+var bad_url_regex_flag = 0 > 0 ? true : false;  
+
 var GoodNetworks_Array = [  ];
 
-// Apple iAd, Microsoft telemetry
 var GoodNetworks_Exceptions_Array = [ ];
 
-// Akamai: 23.64.0.0/14, 23.0.0.0/12, 23.32.0.0/11, 104.64.0.0/10
-
-// Add any bad networks here. Format is network folowed by a comma and
-// optional white space, and then the netmask.
-// From securemecca.com: Adobe marketing cloud, 2o7, omtrdc, Sedo domain parking, flyingcroc, accretive
 var BadNetworks_Array = [  ];
 
-// block these schemes; use the command line for ftp, rsync, etc. instead
-//var bad_schemes_RegExp = RegExp("^(?:ftp|sftp|tftp|ftp-data|rsync|finger|gopher)", "i")
-
-// RegExp for schemes; lengths from
-// perl -lane 'BEGIN{$l=0;} {!/^#/ && do{$ll=length($F[0]); if($ll>$l){$l=$ll;}};} END{print $l;}' /etc/services
 var schemepart_RegExp = RegExp("^([\\w*+-]{2,15}):\\/{0,2}","i");
 var hostpart_RegExp = RegExp("^((?:[\\w-]+\\.)+[a-zA-Z0-9-]{2,24}\\.?)", "i");
 var querypart_RegExp = RegExp("^((?:[\\w-]+\\.)+[a-zA-Z0-9-]{2,24}\\.?[\\w~%.\\/^*-]*)(\\??\\S*?)$", "i");
 var domainpart_RegExp = RegExp("^(?:[\\w-]+\\.)*((?:[\\w-]+\\.)[a-zA-Z0-9-]{2,24})\\.?", "i");
-
-//////////////////////////////////////////////////
-// Define the is_ipv4_address function and vars //
-//////////////////////////////////////////////////
 
 var ipv4_RegExp = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 
@@ -99,28 +71,14 @@ function is_ipv4_address(host)
     return is_valid_ipv4;
 }
 
-// object hashes
-// Note: original stackoverflow-based hasOwnProperty does not woth within iOS kernel 
 var hasOwnProperty = function(obj, prop) {
     return obj.hasOwnProperty(prop);
 }
 
-/////////////////////
-// Done Setting Up //
-/////////////////////
+var use_pass_rules_parts_flag = true;
+var alert_flag = false;
+var debug_flag = false;
 
-// debug with Chrome at chrome://net-internals/#events
-// alert("Debugging message.")
-
-//////////////////////////////////
-// Define the FindProxyFunction //
-//////////////////////////////////
-
-var use_pass_rules_parts_flag = true;  // use the pass rules for url parts, then apply the block rules
-var alert_flag = false;                // use for short-circuit '&&' to print debugging statements
-var debug_flag = false;               // use for short-circuit '&&' to print debugging statements
-
-// EasyList filtering for FindProxyForURL(url, host)
 function EasyListFindProxyForURL(url, host)
 {
     var host_is_ipv4 = is_ipv4_address(host);
@@ -129,20 +87,17 @@ function EasyListFindProxyForURL(url, host)
     alert_flag && alert("url is: " + url);
     alert_flag && alert("host is: " + host);
 
-    // Extract scheme and url without scheme
     var scheme = url.match(schemepart_RegExp)
     scheme = scheme.length > 0? scheme[1] : "";
 
-    // Remove the scheme and extract the path for regex efficiency
     var url_noscheme = url.replace(schemepart_RegExp,"");
     var url_pathonly = url_noscheme.replace(hostpart_RegExp,"");
     var url_noquery = url_noscheme.replace(querypart_RegExp,"$1");
-    // Remove the server name from the url and host if host is not an IPv4 address
+
     var url_noserver = !host_is_ipv4 ? url_noscheme.replace(domainpart_RegExp,"$1") : url_noscheme;
     var url_noservernoquery = !host_is_ipv4 ? url_noquery.replace(domainpart_RegExp,"$1") : url_noscheme;
     var host_noserver =  !host_is_ipv4 ? host.replace(domainpart_RegExp,"$1") : host;
 
-    // Debugging results
     if (debug_flag && alert_flag) {
         alert("url_noscheme is: " + url_noscheme);
         alert("url_pathonly is: " + url_pathonly);
@@ -152,25 +107,15 @@ function EasyListFindProxyForURL(url, host)
         alert("host_noserver is: " + host_noserver);
     }
 
-    // Short circuit to blackhole for good_da_host_exceptions
     if ( hasOwnProperty(good_da_host_exceptions_JSON,host) ) {
         alert_flag && alert("good_da_host_exceptions_JSON blackhole!");
         return blackhole;
     }
 
-    ///////////////////////////////////////////////////////////////////////
-    // Check to make sure we can get an IPv4 address from the given host //
-    // name.  If we cannot do that then skip the Networks tests.         //
-    ///////////////////////////////////////////////////////////////////////
-
     host_ipv4_address = host_is_ipv4 ? host : (isResolvable(host) ? dnsResolve(host) : false);
 
     if (host_ipv4_address) {
         alert_flag && alert("host ipv4 address is: " + host_ipv4_address);
-        /////////////////////////////////////////////////////////////////////////////
-        // If the IP translates to one of the GoodNetworks_Array (with exceptions) //
-        // we pass it because it is considered safe.                               //
-        /////////////////////////////////////////////////////////////////////////////
 
         for (i in GoodNetworks_Exceptions_Array) {
             tmpNet = GoodNetworks_Exceptions_Array[i].split(/,\s*/);
@@ -187,11 +132,6 @@ function EasyListFindProxyForURL(url, host)
             }
         }
 
-        ///////////////////////////////////////////////////////////////////////
-        // If the IP translates to one of the BadNetworks_Array we fail it   //
-        // because it is not considered safe.                                //
-        ///////////////////////////////////////////////////////////////////////
-
         for (i in BadNetworks_Array) {
             tmpNet = BadNetworks_Array[i].split(/,\s*/);
             if (isInNet(host_ipv4_address, tmpNet[0], tmpNet[1])) {
@@ -201,21 +141,7 @@ function EasyListFindProxyForURL(url, host)
         }
     }
 
-    //////////////////////////////////////////////////////////////////////////////
-    // HTTPS: https scheme can only use domain information                      //
-    // unless PacHttpsUrlStrippingEnabled == false [Chrome] or                  //
-    // network.proxy.autoconfig_url.include_path == true [firefox]              //
-    // E.g. on macOS:                                                           //
-    // defaults write com.google.Chrome PacHttpsUrlStrippingEnabled -bool false //
-    // Check setting at page chrome://policy                                    //
-    //////////////////////////////////////////////////////////////////////////////
-
-    // Assume browser has disabled path access if scheme is https and path is '/'
     if ( scheme == "https" && url_pathonly == "/" ) {
-
-        ///////////////////////////////////////////////////////////////////////
-        // PASS LIST:   domains matched here will always be allowed.         //
-        ///////////////////////////////////////////////////////////////////////
 
         if ( (good_da_host_exact_flag && (hasOwnProperty(good_da_host_JSON,host_noserver)||hasOwnProperty(good_da_host_JSON,host)))
             && !hasOwnProperty(good_da_host_exceptions_JSON,host) ) {
@@ -223,31 +149,18 @@ function EasyListFindProxyForURL(url, host)
             return proxy;
         }
 
-        //////////////////////////////////////////////////////////
-        // BLOCK LIST:	stuff matched here here will be blocked //
-        //////////////////////////////////////////////////////////
-
         if ( (bad_da_host_exact_flag && (hasOwnProperty(bad_da_host_JSON,host_noserver)||hasOwnProperty(bad_da_host_JSON,host))) ) {
             alert_flag && alert("HTTPS blackhole: " + host + ", " + host_noserver);
             return blackhole;
         }
     }
 
-    ////////////////////////////////////////
-    // HTTPS and HTTP: full path analysis //
-    ////////////////////////////////////////
-
     if (scheme == "https" || scheme == "http") {
 
-        ///////////////////////////////////////////////////////////////////////
-        // PASS LIST:   domains matched here will always be allowed.         //
-        ///////////////////////////////////////////////////////////////////////
-
         if ( !hasOwnProperty(good_da_host_exceptions_JSON,host)
-            && ((good_da_host_exact_flag && (hasOwnProperty(good_da_host_JSON,host_noserver)||hasOwnProperty(good_da_host_JSON,host))) ||  // fastest test first
+            && ((good_da_host_exact_flag && (hasOwnProperty(good_da_host_JSON,host_noserver)||hasOwnProperty(good_da_host_JSON,host))) || 
                 (use_pass_rules_parts_flag &&
                     (good_da_hostpath_exact_flag && (hasOwnProperty(good_da_hostpath_JSON,url_noservernoquery)||hasOwnProperty(good_da_hostpath_JSON,url_noquery)) ) ||
-                    // test logic: only do the slower test if the host has a (non)suspect fqdn
                     (good_da_host_regex_flag && (good_da_host_RegExp.test(host_noserver)||good_da_host_RegExp.test(host))) ||
                     (good_da_hostpath_regex_flag && (good_da_hostpath_RegExp.test(url_noservernoquery)||good_da_hostpath_RegExp.test(url_noquery))) ||
                     (good_da_regex_flag && (good_da_RegExp.test(url_noserver)||good_da_RegExp.test(url_noscheme))) ||
@@ -256,10 +169,6 @@ function EasyListFindProxyForURL(url, host)
             return proxy;
         }
 
-        //////////////////////////////////////////////////////////
-        // BLOCK LIST:	stuff matched here here will be blocked //
-        //////////////////////////////////////////////////////////
-        // Debugging results
         if (debug_flag && alert_flag) {
             alert("hasOwnProperty(bad_da_host_JSON," + host_noserver + "): " + (bad_da_host_exact_flag && hasOwnProperty(bad_da_host_JSON,host_noserver)));
             alert("hasOwnProperty(bad_da_host_JSON," + host + "): " + (bad_da_host_exact_flag && hasOwnProperty(bad_da_host_JSON,host)));
@@ -274,12 +183,10 @@ function EasyListFindProxyForURL(url, host)
         }
     }
 
-    // default pass
     alert_flag && alert("Default PASS: " + url + ", " + host);
     return proxy;
 }
 
-// User-supplied FindProxyForURL()
 function FindProxyForURL(url, host)
 {
 if (
